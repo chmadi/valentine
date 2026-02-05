@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For Selenay 🖤</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Great+Vibes&family=IM+Fell+English:ital@0;1&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #09070d;
+      --panel: rgba(20, 12, 26, 0.78);
+      --pink: #ff63c8;
+      --hot: #ff2ea6;
+      --white: #f6f3ff;
+      --muted: rgba(246,243,255,0.75);
+      --border: rgba(255,99,200,0.35);
+      --shadow: 0 18px 50px rgba(0,0,0,0.6);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background: var(--bg);
+      color: var(--white);
+      font-family: "Quicksand", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow:hidden;
+    }
+
+    /* DEBUG banner if photos fail */
+    .debug{
+      position: fixed;
+      left: 12px;
+      bottom: 12px;
+      z-index: 9999;
+      background: rgba(0,0,0,0.75);
+      border: 1px solid rgba(255,99,200,0.35);
+      color: rgba(246,243,255,0.9);
+      padding: 10px 12px;
+      border-radius: 12px;
+      max-width: min(560px, 92vw);
+      font-size: 13px;
+      display:none;
+      backdrop-filter: blur(8px);
+    }
+    .debug.show{ display:block; }
+
+    /* ===== MULTI-ROW PHOTO WALLPAPER SCROLL ===== */
+    .photo-roll{
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events:none;
+      overflow:hidden;
+
+      /* you already tuned blur — keep this editable */
+      opacity: 0.95;
+      filter: blur(0.5px) brightness(1.2) saturate(1.3);
+    }
+
+    /* dark/pink overlay on top of the photos */
+    .photo-roll::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(900px 500px at 20% 20%, rgba(255,99,200,0.10), transparent 60%),
+        radial-gradient(700px 500px at 80% 30%, rgba(255,46,166,0.08), transparent 55%),
+        radial-gradient(900px 700px at 50% 100%, rgba(0,0,0,0.45), rgba(0,0,0,0.70));
+      z-index: 3;
+    }
+
+    .photo-wall{
+      position:absolute;
+      inset:0;
+      z-index: 1;
+      display:grid;
+      grid-template-rows: repeat(4, 1fr); /* 4 stacked rows */
+      gap: 10px;
+      padding: 12px 0;
+    }
+
+    .row{
+      position: relative;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+    }
+
+    .marquee{
+      width:max-content;
+      display:flex;
+      align-items:center;
+      gap: 26px;
+      padding: 0 26px;
+      will-change: transform;
+    }
+
+    /* each row has its own animation speed + direction */
+    .row[data-dir="left"]  .marquee{ animation: scrollLeft 115s linear infinite; }
+    .row[data-dir="right"] .marquee{ animation: scrollRight 130s linear infinite; }
+
+    .row:nth-child(2) .marquee{ animation-duration: 145s; }
+    .row:nth-child(3) .marquee{ animation-duration: 120s; }
+    .row:nth-child(4) .marquee{ animation-duration: 155s; }
+
+    @keyframes scrollLeft{
+      from{ transform: translateX(0); }
+      to  { transform: translateX(-50%); }
+    }
+    @keyframes scrollRight{
+      from{ transform: translateX(-50%); }
+      to  { transform: translateX(0); }
+    }
+
+    .set{
+      display:flex;
+      gap:26px;
+      padding: 0 26px;
+      align-items:center;
+    }
+
+    /* slightly different sizes per row = more cinematic */
+    .row:nth-child(1) img{ width: 320px; height: 210px; }
+    .row:nth-child(2) img{ width: 280px; height: 195px; }
+    .row:nth-child(3) img{ width: 300px; height: 205px; }
+    .row:nth-child(4) img{ width: 260px; height: 185px; }
+
+    .set img{
+      object-fit: cover;
+      border-radius: 22px;
+      border: 1px solid rgba(255,99,200,0.18);
+      box-shadow: 0 26px 70px rgba(0,0,0,0.60);
+      transform: rotate(-2deg);
+      opacity: 0.95;
+    }
+    .set img:nth-child(even){ transform: rotate(2deg); }
+
+    /* Stars overlay */
+    .stars{
+      position:fixed;
+      inset:-50px;
+      z-index: 2;
+      background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.7) 40%, transparent 41%),
+        radial-gradient(1px 1px at 80px 120px, rgba(255,99,200,0.6) 45%, transparent 46%),
+        radial-gradient(1px 1px at 200px 90px, rgba(255,255,255,0.5) 45%, transparent 46%),
+        radial-gradient(2px 2px at 340px 180px, rgba(255,46,166,0.45) 40%, transparent 41%),
+        radial-gradient(1px 1px at 420px 50px, rgba(255,255,255,0.55) 45%, transparent 46%);
+      background-size: 500px 260px;
+      opacity:0.30;
+      filter: blur(0.2px);
+      animation: drift 18s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes drift{
+      from{ transform: translate3d(0,0,0); }
+      to{ transform: translate3d(-120px, 60px, 0); }
+    }
+
+    .card{
+      width:min(740px, 92vw);
+      padding:28px 22px 26px;
+      border:1px solid var(--border);
+      border-radius:22px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      position:relative;
+      z-index: 5;
+    }
+
+    .top{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      justify-content:center;
+      margin-bottom:10px;
+    }
+
+    .bow{ width:66px; height:46px; position:relative; filter: drop-shadow(0 10px 16px rgba(0,0,0,0.55)); }
+    .bow::before, .bow::after{
+      content:""; position:absolute; top:8px; width:30px; height:26px;
+      background: linear-gradient(180deg, var(--pink), var(--hot));
+      border-radius: 20px 22px 14px 22px;
+      border:1px solid rgba(255,255,255,0.18);
+    }
+    .bow::before{ left:0; transform: rotate(-10deg); }
+    .bow::after{ right:0; transform: rotate(10deg); border-radius: 22px 20px 22px 14px; }
+    .bow .knot{
+      position:absolute; left:50%; top:16px; transform: translateX(-50%);
+      width:18px; height:18px; border-radius:999px;
+      background: linear-gradient(180deg, #ffd0ef, var(--pink));
+      border:1px solid rgba(255,255,255,0.25);
+    }
+
+    h1{
+      margin:0;
+      text-align:center;
+      font-family: "UnifrakturCook", cursive;
+      font-size: clamp(34px, 5vw, 54px);
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.45), 0 0 20px rgba(255,99,200,0.18);
+    }
+
+    .float-hearts{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      margin: 8px 0 8px;
+      opacity: .9;
+    }
+    .float-hearts span{
+      display:inline-block;
+      animation: bob 1.9s ease-in-out infinite;
+      filter: drop-shadow(0 10px 16px rgba(0,0,0,0.35));
+    }
+    .float-hearts span:nth-child(2){ animation-delay: .25s; }
+    .float-hearts span:nth-child(3){ animation-delay: .5s; }
+    .float-hearts span:nth-child(4){ animation-delay: .75s; }
+    @keyframes bob{
+      0%,100%{ transform: translateY(0) scale(1); opacity:.9; }
+      50%{ transform: translateY(-6px) scale(1.06); opacity:1; }
+    }
+
+    .glowline{
+      margin: 8px auto 18px;
+      width: min(560px, 92%);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,99,200,0.75), transparent);
+      position: relative;
+    }
+    .glowline::after{
+      content:"";
+      position:absolute;
+      left:-20%;
+      top:-1px;
+      width:40%;
+      height:3px;
+      background: rgba(255,99,200,0.65);
+      filter: blur(6px);
+      animation: sweep 2.8s ease-in-out infinite;
+      opacity:.7;
+    }
+    @keyframes sweep{
+      0%{ transform: translateX(0); opacity: .15; }
+      50%{ transform: translateX(220%); opacity: .8; }
+      100%{ transform: translateX(440%); opacity: .15; }
+    }
+
+    .question{
+      text-align:center;
+      font-size: clamp(18px, 2.4vw, 22px);
+      margin: 6px 0 16px;
+    }
+
+    .btn-row{
+      display:flex;
+      justify-content:center;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom: 8px;
+      user-select:none;
+      touch-action: manipulation;
+    }
+
+    button{
+      appearance:none;
+      border:none;
+      cursor:pointer;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.3px;
+      min-width: 160px;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    button:hover{ transform: translateY(-1px) scale(1.02); }
+    button:active{ transform: translateY(0px) scale(0.99); }
+
+    .yes{
+      background: linear-gradient(180deg, rgba(255,99,200,0.95), rgba(255,46,166,0.85));
+      color: #140a18;
+      box-shadow: 0 12px 26px rgba(255,46,166,0.22);
+    }
+    .no{
+      background: rgba(246,243,255,0.10);
+      color: var(--white);
+      border: 1px solid rgba(246,243,255,0.22);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.35);
+    }
+
+    .hint{
+      text-align:center;
+      color: rgba(246,243,255,0.65);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    /* ===== FULLSCREEN LETTER POPUP (fade-in) ===== */
+    .modal{
+      position: fixed;
+      inset: 0;
+      display:none;
+      place-items:center;
+      padding: 22px;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(10px);
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 360ms ease;
+    }
+    .modal.show{ display:grid; opacity: 1; }
+
+    .letter{
+      width: min(980px, 96vw);
+      max-height: min(88vh, 1000px);
+      overflow:auto;
+      border-radius: 20px;
+      padding: 28px 22px;
+      position: relative;
+
+      background:
+        radial-gradient(120% 120% at 50% 10%, rgba(0,0,0,0.14), transparent 55%),
+        linear-gradient(180deg, rgba(252,244,234,0.98), rgba(230,210,185,0.96));
+      color: #1a0c18;
+      border: 1px solid rgba(255,99,200,0.22);
+      box-shadow: 0 22px 70px rgba(0,0,0,0.65);
+      font-family: "IM Fell English", serif;
+      transform: translateY(14px) scale(0.985);
+      opacity: 0;
+      transition: transform 360ms ease, opacity 360ms ease;
+    }
+    .modal.show .letter{ transform: translateY(0) scale(1); opacity: 1; }
+
+    .close{
+      position: sticky;
+      top: 0;
+      display:flex;
+      justify-content:flex-end;
+      margin: -10px -6px 6px;
+      z-index: 2;
+    }
+    .close button{
+      min-width: unset;
+      padding: 10px 14px;
+      font-weight: 800;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.25);
+      background: rgba(255,255,255,0.65);
+      color:#1a0c18;
+      cursor:pointer;
+    }
+
+    .letter h2{
+      margin: 2px 0 8px;
+      font-family: "Great Vibes", cursive;
+      font-size: clamp(40px, 5vw, 64px);
+      color: #2a0d22;
+      text-align:center;
+    }
+    .letter p{
+      margin: 10px 0;
+      font-size: clamp(19px, 2.2vw, 24px);
+      line-height: 1.65;
+      font-style: italic;
+      text-align:center;
+    }
+    .sig{
+      margin-top: 16px;
+      text-align:center;
+      font-family: "Great Vibes", cursive;
+      font-size: clamp(30px, 4vw, 50px);
+      color: rgba(40,10,30,0.92);
+    }
+
+    .iloveyou{
+      margin: 10px auto 6px;
+      text-align:center;
+      font-family: "Great Vibes", cursive;
+      font-size: clamp(34px, 5vw, 62px);
+      background: linear-gradient(90deg, rgba(255,99,200,0.95), rgba(255,255,255,0.95), rgba(255,46,166,0.95));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 0.5px;
+      filter: drop-shadow(0 18px 24px rgba(0,0,0,0.35));
+      animation: shine 2.8s ease-in-out infinite;
+    }
+    @keyframes shine{
+      0%,100%{ transform: translateY(0) scale(1); opacity: .95; }
+      50%{ transform: translateY(-3px) scale(1.02); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .stars, .glowline::after, .float-hearts span, .iloveyou,
+      .row[data-dir="left"] .marquee, .row[data-dir="right"] .marquee { animation:none; }
+      .modal, .letter{ transition:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- MULTI-ROW BACKGROUND -->
+  <div class="photo-roll" aria-hidden="true">
+    <div class="photo-wall" id="photoWall"></div>
+  </div>
+
+  <div class="stars"></div>
+
+  <main class="card">
+    <div class="top">
+      <div class="bow" aria-hidden="true"><div class="knot"></div></div>
+      <h1>My Dark Little Valentine</h1>
+      <div class="bow" aria-hidden="true"><div class="knot"></div></div>
+    </div>
+
+    <div class="float-hearts" aria-hidden="true">
+      <span>🖤</span><span>🎀</span><span>💗</span><span>✨</span>
+    </div>
+    <div class="glowline" aria-hidden="true"></div>
+
+    <p class="question">Selenay… will you be my Valentine?</p>
+
+    <div class="btn-row">
+      <button class="yes" id="btnYes" type="button"><span class="label">Yes 💖</span></button>
+      <button class="no"  id="btnNo"  type="button"><span class="label">No 🙈</span></button>
+    </div>
+
+    <div class="hint" id="hint">Only “No” is mischievous 😈</div>
+  </main>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="letter">
+      <div class="close"><button id="closeBtn" type="button">Close ✦</button></div>
+
+      <div class="iloveyou">I love u Selenay</div>
+      <h2>My Baby Selo…</h2>
+
+      <p>
+        The day I met you, something changed in me.<br>
+        You didn’t just enter my life… you <b>brightened</b> it.
+      </p>
+
+      <p>
+        You are the kindest, sweetest person I’ve ever known<br>
+        the type of girl who makes everything feel softer and safer just by being there.
+      </p>
+
+      <p>
+        I still love our story… how we met online, and how it turned into something real.<br>
+        And when you asked me to come with you to pick up that guitar…<br>
+        I said yes and honestly, that was one of the best things that ever happened to me.
+      </p>
+
+      <p>
+        I’m grateful for every laugh, every moment, every little thing you are.<br>
+        And I want you to know this clearly:
+        <b>I love you so much, Selenay.</b>
+      </p>
+
+      <p>
+        Will you be my Valentine? 🖤🎀
+      </p>
+
+      <div class="sig">— always yours ♡</div>
+    </div>
+  </div>
+
+  <div class="debug" id="debug"></div>
+
+  <script>
+    // ====== PHOTO LOADER (tries jpg/JPG/jpeg/png) ======
+    const debug = document.getElementById("debug");
+    const wall = document.getElementById("photoWall");
+
+    const baseNames = Array.from({length: 21}, (_, i) => String(i+1));
+    const exts = [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".PNG"];
+
+    function makeImg(name){
+      const img = document.createElement("img");
+      img.alt = "";
+
+      let tryIndex = 0;
+      function tryNext(){
+        if (tryIndex >= exts.length){
+          img.dataset.failed = "1";
+          img.removeAttribute("src");
+          return;
+        }
+        img.src = `photos/${name}${exts[tryIndex]}`;
+        tryIndex++;
+      }
+      img.onerror = () => tryNext();
+      tryNext();
+      return img;
+    }
+
+    // Build 4 rows, alternating direction
+    const rows = [
+      { dir: "left" },
+      { dir: "right" },
+      { dir: "left" },
+      { dir: "right" }
+    ];
+
+    const allImgs = [];
+    rows.forEach((r) => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.dataset.dir = r.dir;
+
+      const marquee = document.createElement("div");
+      marquee.className = "marquee";
+
+      const setA = document.createElement("div");
+      setA.className = "set";
+      const setB = document.createElement("div");
+      setB.className = "set";
+
+      // Fill both sets with the same images for seamless looping
+      for (const n of baseNames){
+        const im1 = makeImg(n); setA.appendChild(im1); allImgs.push(im1);
+        const im2 = makeImg(n); setB.appendChild(im2); allImgs.push(im2);
+      }
+
+      marquee.appendChild(setA);
+      marquee.appendChild(setB);
+      row.appendChild(marquee);
+      wall.appendChild(row);
+    });
+
+    // After a moment, check if anything loaded
+    setTimeout(() => {
+      const loaded = allImgs.filter(im => im.complete && im.naturalWidth > 0).length;
+      if (loaded === 0){
+        debug.classList.add("show");
+        debug.innerHTML =
+          "Your photos are not loading.<br><br>" +
+          "✅ Folder must be named <b>photos</b> and sit next to this HTML.<br>" +
+          "✅ Files should be named <b>1.jpg, 2.jpg, ...</b> (or png/jpeg).<br>" +
+          "✅ Quick test: open <b>photos/1.jpg</b> directly.";
+      }
+    }, 1200);
+
+    // ====== BUTTONS + POPUP ======
+    const btnYes = document.getElementById("btnYes");
+    const btnNo  = document.getElementById("btnNo");
+    const modal  = document.getElementById("modal");
+    const closeBtn = document.getElementById("closeBtn");
+    const hint = document.getElementById("hint");
+
+    let accepted = false;
+    let locked = false;
+
+    function setLabel(btn){
+      btn.querySelector(".label").textContent = btn.classList.contains("yes") ? "Yes 💖" : "No 🙈";
+    }
+    function swapLabels(){
+      btnYes.classList.toggle("yes"); btnYes.classList.toggle("no");
+      btnNo.classList.toggle("yes");  btnNo.classList.toggle("no");
+      setLabel(btnYes); setLabel(btnNo);
+    }
+
+    // Only hover the button that currently has class "no" triggers swap.
+    function teaseIfNoHovered(e){
+      if (accepted || locked) return;
+      const hoveredBtn = e.currentTarget;
+      if (!hoveredBtn.classList.contains("no")) return;
+      locked = true;
+      swapLabels();
+      setTimeout(() => locked = false, 260);
+    }
+
+    btnYes.addEventListener("pointerenter", teaseIfNoHovered);
+    btnNo.addEventListener("pointerenter", teaseIfNoHovered);
+
+    function accept(){
+      accepted = true;
+      modal.classList.add("show");
+      hint.textContent = "Hehe… mission complete 🖤";
+      btnYes.disabled = true;
+      btnNo.disabled = true;
+      btnYes.style.cursor = "default";
+      btnNo.style.cursor = "default";
+    }
+
+    function handleClick(btn){
+      if (accepted) return;
+      if (btn.classList.contains("yes")) accept();
+      else teaseIfNoHovered({ currentTarget: btn });
+    }
+
+    btnYes.addEventListener("click", () => handleClick(btnYes));
+    btnNo.addEventListener("click",  () => handleClick(btnNo));
+
+    closeBtn.addEventListener("click", () => modal.classList.remove("show"));
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("show"); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") modal.classList.remove("show"); });
+  </script>
+</body>
+</html>
